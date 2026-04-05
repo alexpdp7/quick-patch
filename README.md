@@ -1,5 +1,9 @@
 # Quick patch
 
+> [!CAUTION]
+> This is vulnerable to path traversal.
+> Do not expose this.
+
 ```
 git clone --bare $SOME_REPO $PATH
 REPO=$PATH DEFAULT_BRANCH=$DEFAULT_BRANCH python3 quick_patch.py
