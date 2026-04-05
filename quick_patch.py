@@ -30,6 +30,15 @@ def quick_patch_app(environ, start_response):
 
     out = f"""
     <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <style>
+          textarea {{
+            width: 100%;
+            height: 80%;
+          }}
+        </style>
+      </head>
       <body>
         <form>
           <textarea>{html.escape(file)}</textarea>
