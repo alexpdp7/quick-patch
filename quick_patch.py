@@ -29,7 +29,9 @@ class Repo:
                 check=True,
             )
             try:
-                (tempdir / path).write_text(patched)
+                patch_path = tempdir / path
+                assert patch_path.relative_to(tempdir)
+                patch_path.write_text(patched)
                 subprocess.run(
                     ["git", "add", "."],
                     check=True,
@@ -145,7 +147,28 @@ def quick_patch_app(environ, start_response):
     return [out.encode("UTF8")]
 
 
-with make_server("", 8000, quick_patch_app) as httpd:
-    print("http://0.0.0.0:8000")
+if __name__ == "__main__":
+    with make_server("", 8000, quick_patch_app) as httpd:
+        print("http://0.0.0.0:8000")
 
-    httpd.serve_forever()
+        httpd.serve_forever()
+
+
+import unittest  # noqa: E402 I like it this way.
+
+
+class Test(unittest.TestCase):
+    def test__make_patch_does_not_traverse(self):
+        with tempfile.TemporaryDirectory() as traversed:
+            traversed = pathlib.Path(traversed) / "foo"
+            try:
+                with tempfile.TemporaryDirectory() as repo:
+                    repo = pathlib.Path(repo)
+                    traversed = pathlib.Path(traversed)
+                    subprocess.run(["git", "init", "--bare"], cwd=repo, check=True)
+                    repo = Repo(repo, "main")
+                    repo.make_patch(traversed, "foo", None, None)
+            except subprocess.CalledProcessError:
+                # Branch clean up fails
+                pass
+            assert not traversed.exists()

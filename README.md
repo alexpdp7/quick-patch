@@ -1,9 +1,5 @@
 # Quick patch
 
-> [!CAUTION]
-> This is vulnerable to path traversal.
-> Do not expose this.
-
 A non-functional-yet prototype web application about making quick patches to a Git repository.
 
 Create a bare Git repo, for example with:
@@ -39,3 +35,9 @@ Some ideas in my head are:
 * Dropping format patches or even work trees/branches somewhere in the filesystem
 
 Contact me (or send a patch) if you have an idea.
+
+## Hacking
+
+```
+python3 -m unittest quick_patch
+```
