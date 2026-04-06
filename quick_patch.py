@@ -9,8 +9,9 @@ from wsgiref.simple_server import make_server
 
 
 class Repo:
-    repo = pathlib.Path(os.environ["REPO"])
-    branch = os.environ["DEFAULT_BRANCH"]
+    def __init__(self, repo, branch):
+        self.repo = repo
+        self.branch = branch
 
     def get_file(self, path):
         return subprocess.run(
@@ -73,7 +74,7 @@ class Repo:
                 )
 
 
-repo = Repo()
+repo = Repo(pathlib.Path(os.environ["REPO"]), os.environ["DEFAULT_BRANCH"])
 
 
 def _get_form_field(input_, name: str):
