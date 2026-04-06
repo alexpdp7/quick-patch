@@ -47,7 +47,6 @@ class Repo:
                 return subprocess.run(
                     ["git", "format-patch", "--stdout", "HEAD^"],
                     check=True,
-                    encoding="UTF8",
                     cwd=tempdir,
                     stdout=subprocess.PIPE,
                 ).stdout
@@ -76,30 +75,45 @@ class Repo:
                 )
 
 
-def _get_form_field(input_, name: str):
+def _get_form_field(input_: dict[bytes, list[bytes]], name: str):
     values = input_.get(name.encode("UTF8"), [])
     assert len(values) < 2
     return values[0].decode("UTF8") if values else None
 
 
 def quick_patch_app(environ, start_response):
-    path = environ["PATH_INFO"][1:]
-    input_ = environ["wsgi.input"].read(int(environ["CONTENT_LENGTH"] or "0"))
-    input_ = urllib.parse.parse_qs(input_)
     repo = Repo(pathlib.Path(os.environ["REPO"]), os.environ["DEFAULT_BRANCH"])
+    path = environ["PATH_INFO"][1:]
 
-    posted_file = _get_form_field(input_, "file")
-    file = posted_file or repo.get_file(path)
+    content_length = environ["CONTENT_LENGTH"]
 
-    patch = ""
-    if posted_file:
-        author = f"{_get_form_field(input_, 'name') or 'unknown'} <{_get_form_field(input_, 'email') or 'unknown@example.com'}>"
+    if content_length:
+        content_length = int(content_length)
+        input_ = environ["wsgi.input"].read(content_length)
+        input_ = urllib.parse.parse_qs(input_)
+
+        posted_file = _get_form_field(input_, "file")
+        assert posted_file
+
+        name = _get_form_field(input_, 'name') or 'unknown'
+        email = _get_form_field(input_, 'email') or 'unknown@example.com'
+        author = f"{name} <{email}>"
+
         message = _get_form_field(input_, "summary") or "Apply feedback"
+
         description = _get_form_field(input_, "description")
         if description:
             message += "\n\n"
             message += description
-        patch = repo.make_patch(path, file.replace("\r\n", "\n"), author, message)
+
+        patch = repo.make_patch(path, posted_file.replace("\r\n", "\n"), author, message)
+
+        headers= [("Content-Disposition", 'attachment; filename="patch.patch"')]
+        start_response("200 OK", headers)
+
+        return [patch]
+
+    file = repo.get_file(path)
 
     out = f"""
     <html>
@@ -134,9 +148,8 @@ def quick_patch_app(environ, start_response):
           <label>Proposed change
             <textarea name="file">{html.escape(file)}</textarea>
           </label>
-          <input type="submit">
+          <input type="submit" value="Download patch">
         </form>
-        <pre>{html.escape(patch)}</pre>
       </body>
     </html>
     """

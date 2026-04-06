@@ -27,15 +27,6 @@ I can add a link to each blog entry that pops us an editor so that people with a
 
 This projects tries to replicate this feature, lifting the GitHub account requirement.
 
-However, I have not figured out how to ship the patch in a convenient way for submitter and maintainer.
-Some ideas in my head are:
-
-* Using `mailto:` links
-* Armoring the patch with Base64 encoding
-* Dropping format patches or even work trees/branches somewhere in the filesystem
-
-Contact me (or send a patch) if you have an idea.
-
 ## Hacking
 
 ```
