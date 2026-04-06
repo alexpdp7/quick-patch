@@ -168,7 +168,12 @@ class Test(unittest.TestCase):
                     subprocess.run(["git", "init", "--bare"], cwd=repo, check=True)
                     repo = Repo(repo, "main")
                     repo.make_patch(traversed, "foo", None, None)
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError as e:
                 # Branch clean up fails
-                pass
+                assert e.cmd[0:1] + e.cmd[2:5] == [
+                    "git",
+                    "branch",
+                    "--delete",
+                    "--force",
+                ]
             assert not traversed.exists()
