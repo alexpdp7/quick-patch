@@ -74,9 +74,6 @@ class Repo:
                 )
 
 
-repo = Repo(pathlib.Path(os.environ["REPO"]), os.environ["DEFAULT_BRANCH"])
-
-
 def _get_form_field(input_, name: str):
     values = input_.get(name.encode("UTF8"), [])
     assert len(values) < 2
@@ -87,7 +84,7 @@ def quick_patch_app(environ, start_response):
     path = environ["PATH_INFO"][1:]
     input_ = environ["wsgi.input"].read(int(environ["CONTENT_LENGTH"] or "0"))
     input_ = urllib.parse.parse_qs(input_)
-    global repo
+    repo = Repo(pathlib.Path(os.environ["REPO"]), os.environ["DEFAULT_BRANCH"])
 
     posted_file = _get_form_field(input_, "file")
     file = posted_file or repo.get_file(path)
